@@ -45,7 +45,7 @@ async fn parse_parts_kdl(path: &std::path::Path) -> Option<Vec<PartInfo>> {
 }
 
 pub async fn get_all_mpns() -> Option<Vec<String>> {
-    let parts = parse_parts_kdl(&std::path::Path::new("db/sources.kdl")).await?;
+    let parts = parse_parts_kdl(std::path::Path::new("db/sources.kdl")).await?;
     let mut all_mpns = Vec::new();
     
     for part in parts {

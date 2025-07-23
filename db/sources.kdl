@@ -1,10 +1,4 @@
 parts {
-    STM32H747XIH6 {
-        mpns "STM32H747XIH6" "STM32H747XIH6TR"
-    }
-
-    RP2040 {
-        aliases "SC0914"
-        mpns "SC0914(7)" "SC0914(13)"
-    }
+    STM32H747XIH6 { mpns "STM32H747XIH6" "STM32H747XIH6TR" }
+    RP2040 { aliases "SC0914";  mpns "SC0914(7)" "SC0914(13)" }
 }

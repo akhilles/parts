@@ -1,11 +1,5 @@
 // WARNING: This file is auto-generated. Do not edit manually.
 
-auto_gen_metadata {
-    source "Digikey API manufacturers endpoint"
-    last-updated "2025-07-23 00:06:33 UTC"
-    total-count 5950
-}
-
 manufacturers {
     "1GLOBAL" id=2322
     "2J Antennas" id=4350
@@ -3417,6 +3411,7 @@ manufacturers {
     "Milwaukee | Gleason Industrial Products" id=601684
     "Minebea Intec" id=3834
     "MINEW" id=6086
+    "MinewSemi" id=6024
     "Minewsemi" id=6024
     "Ming Chiang" id=4010
     "Mini-Circuits" id=3157
@@ -4379,6 +4374,7 @@ manufacturers {
     "Renesas Design Germany GmbH" id=1564
     "Renesas Electronics America/NEC" id=972
     "Renesas Electronics Corporation" id=1695
+    "Renesas Electronics Corporation" id=1833
     "Renesas Electronics Corporation" id=20
     "Renesas Electronics Operations Services Limited" id=1695
     "Renetec, Inc." id=3146
