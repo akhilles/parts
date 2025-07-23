@@ -738,7 +738,7 @@ impl DigikeyClient {
             info!("Created directory: {:?}", digikey_dir);
         }
         
-        let output_path = digikey_dir.join("parts.kdl");
+        let output_path = digikey_dir.join("part-details.kdl");
         
         // Build KDL content
         let mut kdl_content = String::new();
@@ -805,7 +805,7 @@ impl DigikeyClient {
             // Description (using double quotes, escaped)
             kdl_content.push_str(&format!("        description \"{}\"\n", escape_kdl_string(&details.detailed_description)));
             
-            kdl_content.push_str("    }\n\n");
+            kdl_content.push_str("    }\n");
         }
         
         kdl_content.push_str("}\n");
@@ -817,10 +817,10 @@ impl DigikeyClient {
     }
 
     pub fn parse_existing_parts_kdl() -> Result<Vec<ExistingPartData>, DigikeyError> {
-        let parts_path = PathBuf::from("db/digikey/parts.kdl");
+        let parts_path = PathBuf::from("db/digikey/part-details.kdl");
         
         if !parts_path.exists() {
-            info!("No existing parts.kdl file found");
+            info!("No existing part-details.kdl file found");
             return Ok(Vec::new());
         }
         
@@ -889,16 +889,16 @@ impl DigikeyClient {
     pub async fn update_stale_parts(force_refresh: bool) -> Result<(), DigikeyError> {
         info!("Updating stale parts from Digikey API (force_refresh: {})", force_refresh);
         
-        // Get all MPNs from parts.kdl
+        // Get all MPNs from sources.kdl
         let all_mpns = match crate::parts::get_all_mpns().await {
             Some(mpns) => mpns,
             None => {
-                return Err(DigikeyError::Other("Failed to read parts.kdl file".to_string()));
+                return Err(DigikeyError::Other("Failed to read sources.kdl file".to_string()));
             }
         };
         
         if all_mpns.is_empty() {
-            println!("No MPNs found in parts.kdl");
+            println!("No MPNs found in sources.kdl");
             return Ok(());
         }
         
@@ -983,7 +983,7 @@ impl DigikeyClient {
             return Err(DigikeyError::Other("No parts details were available".to_string()));
         }
         
-        println!("\nWriting {} parts to db/digikey/parts.kdl", all_parts_with_details.len());
+        println!("\nWriting {} parts to db/digikey/part-details.kdl", all_parts_with_details.len());
         
         match client.write_parts_to_kdl(&all_parts_with_details).await {
             Ok(path) => {

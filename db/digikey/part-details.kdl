@@ -2,12 +2,12 @@
 
 auto_gen_metadata {
     source "Digikey API parts endpoint"
-    last-updated "2025-07-22 23:57:30 UTC"
+    last-updated "2025-07-23 03:04:18 UTC"
     total-count 4
 }
 
 parts {
-    STM32H747XIH6 mfr="STMicroelectronics" qty=346 status="Active" retrieved="2025-07-22T23:57:30Z" {
+    STM32H747XIH6 mfr="STMicroelectronics" qty=346 status="Active" retrieved="2025-07-23T03:04:18Z" {
         dkpns "497-19503-ND"
         status discontinued=#false eol=#false stocking=#true
         category "Integrated Circuits (ICs)"
@@ -19,8 +19,7 @@ parts {
         }
         description "ARM® Cortex®-M4/M7 STM32H7 Microcontroller IC 32-Bit Dual-Core 240MHz, 480MHz 2MB (2M x 8) FLASH 240+25-TFBGA (14x14)"
     }
-
-    STM32H747XIH6TR mfr="STMicroelectronics" qty=0 status="Active" retrieved="2025-07-22T23:57:30Z" {
+    STM32H747XIH6TR mfr="STMicroelectronics" qty=0 status="Active" retrieved="2025-07-23T03:04:18Z" {
         dkpns "497-STM32H747XIH6TR-ND"
         status discontinued=#false eol=#false stocking=#false
         category "Integrated Circuits (ICs)"
@@ -32,8 +31,7 @@ parts {
         }
         description "ARM® Cortex®-M4F, ARM® Cortex®-M7F STM32H7 Microcontroller IC 32-Bit Dual-Core 240MHz, 480MHz 2MB (2M x 8) FLASH 240+25-TFBGA (14x14)"
     }
-
-    "SC0914(7)" mfr="Raspberry Pi" qty=18907 status="Active" retrieved="2025-07-22T23:57:30Z" {
+    "SC0914(7)" mfr="Raspberry Pi" qty=18907 status="Active" retrieved="2025-07-23T03:04:18Z" {
         dkpns "2648-SC0914(7)TR-ND" "2648-SC0914(7)CT-ND" "2648-SC0914(7)DKR-ND"
         status discontinued=#false eol=#false stocking=#true
         category "Integrated Circuits (ICs)"
@@ -45,8 +43,7 @@ parts {
         }
         description "ARM® Cortex®-M0+ - Microcontroller IC 32-Bit Dual-Core 133MHz External Program Memory 56-QFN (7x7)"
     }
-
-    "SC0914(13)" mfr="Raspberry Pi" qty=60028 status="Active" retrieved="2025-07-22T23:57:30Z" {
+    "SC0914(13)" mfr="Raspberry Pi" qty=60026 status="Active" retrieved="2025-07-23T03:04:18Z" {
         dkpns "2648-SC0914(13)TR-ND" "2648-SC0914(13)CT-ND" "2648-SC0914(13)DKR-ND"
         status discontinued=#false eol=#false stocking=#true
         category "Integrated Circuits (ICs)"
@@ -58,5 +55,4 @@ parts {
         }
         description "ARM® Cortex®-M0+ - Microcontroller IC 32-Bit Dual-Core 133MHz External Program Memory 56-QFN (7x7)"
     }
-
 }
