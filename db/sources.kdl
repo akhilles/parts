@@ -1,6 +1,8 @@
 parts {
     STM32H747XIH6 { mpns "STM32H747XIH6" "STM32H747XIH6TR" }
     RP2040 { aliases "SC0914";  mpns "SC0914(7)" "SC0914(13)" }
+    RP2350A { aliases "SC1509";  mpns "SC1509" "SC1509(13)" }
+    RP2350B { aliases "SC1510";  mpns "SC1510" "SC1510(13)" }
 }
 
 // Resistor series definitions
