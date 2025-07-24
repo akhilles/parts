@@ -20,3 +20,4 @@ urlencoding = "2.1"
 kdl = "6.3"
 chrono = { version = "0.4", features = ["serde"] }
 md5 = "0.7"
+rust_decimal = "1.36"

@@ -4,6 +4,7 @@ use tracing::{error, info};
 mod api_cache;
 mod digikey;
 mod parts;
+mod resistor_series;
 
 #[derive(Parser)]
 #[command(name = "parts")]
@@ -42,6 +43,12 @@ enum GenCommands {
         #[arg(long)]
         force: bool,
     },
+    /// Generate resistor parts from series definitions
+    ResistorSeries {
+        /// Path to the KDL file containing resistor series definitions
+        #[arg(long, default_value = "db/sources.kdl")]
+        file: String,
+    },
 }
 
 #[derive(Subcommand)]
@@ -61,114 +68,131 @@ async fn main() {
     } else {
         tracing_subscriber::EnvFilter::builder().parse_lossy("parts=debug")
     };
-    tracing_subscriber::fmt()
-        .with_env_filter(filter)
-        .init();
+    tracing_subscriber::fmt().with_env_filter(filter).init();
 
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Gen { source } => {
-            match source {
-                GenCommands::DigikeyManufacturers { force } => {
-                    info!("Updating Digikey manufacturers (force: {})", force);
-                    
-                    match digikey::DigikeyClient::update_manufacturers(force).await {
-                        Ok(()) => {
-                            println!("✅ Successfully updated manufacturers information");
-                        },
-                        Err(e) => {
-                            eprintln!("❌ Failed to update manufacturers: {e:?}");
-                            match e {
-                                digikey::DigikeyError::EnvVar(_) => {
-                                    eprintln!("Make sure DIGIKEY_CLIENT_ID and DIGIKEY_CLIENT_SECRET environment variables are set.");
-                                    eprintln!("You can get these from your Digikey developer account at https://developer.digikey.com");
-                                },
-                                digikey::DigikeyError::Api(api_err) => {
-                                    eprintln!("API Error: {api_err}");
-                                    eprintln!("Check if your credentials are valid and you have access to the Product Information API.");
-                                },
-                                _ => {}
+        Commands::Gen { source } => match source {
+            GenCommands::DigikeyManufacturers { force } => {
+                info!("Updating Digikey manufacturers (force: {})", force);
+
+                match digikey::DigikeyClient::update_manufacturers(force).await {
+                    Ok(()) => {
+                        println!("✅ Successfully updated manufacturers information");
+                    }
+                    Err(e) => {
+                        eprintln!("❌ Failed to update manufacturers: {e:?}");
+                        match e {
+                            digikey::DigikeyError::EnvVar(_) => {
+                                eprintln!(
+                                    "Make sure DIGIKEY_CLIENT_ID and DIGIKEY_CLIENT_SECRET environment variables are set."
+                                );
+                                eprintln!(
+                                    "You can get these from your Digikey developer account at https://developer.digikey.com"
+                                );
                             }
+                            digikey::DigikeyError::Api(api_err) => {
+                                eprintln!("API Error: {api_err}");
+                                eprintln!(
+                                    "Check if your credentials are valid and you have access to the Product Information API."
+                                );
+                            }
+                            _ => {}
                         }
                     }
-                },
-                GenCommands::DigikeyPartInfo { force } => {
-                    info!("Updating Digikey part information (force: {})", force);
-                    
-                    match digikey::DigikeyClient::update_parts(force).await {
-                        Ok(()) => {
-                            println!("✅ Successfully updated parts information");
-                        },
-                        Err(e) => {
-                            eprintln!("❌ Failed to update parts: {e:?}");
-                        }
+                }
+            }
+            GenCommands::DigikeyPartInfo { force } => {
+                info!("Updating Digikey part information (force: {})", force);
+
+                match digikey::DigikeyClient::update_parts(force).await {
+                    Ok(()) => {
+                        println!("✅ Successfully updated parts information");
+                    }
+                    Err(e) => {
+                        eprintln!("❌ Failed to update parts: {e:?}");
+                    }
+                }
+            }
+            GenCommands::ResistorSeries { file } => {
+                info!("Parsing resistor series from: {}", file);
+
+                match resistor_series::parse_and_print(&file).await {
+                    Ok(()) => {
+                        println!("✅ Successfully parsed resistor series");
+                    }
+                    Err(e) => {
+                        eprintln!("❌ Failed to parse resistor series: {e:?}");
                     }
                 }
             }
         },
-        Commands::Fetch { source } => {
-            match source {
-                FetchCommands::DigikeyPartInfo { mpn } => {
-                    info!("Fetching Digikey part information for: {}", mpn);
-                    
-                    match digikey::DigikeyClient::new() {
-                        Ok(client) => {
-                            match client.get_part_details(&mpn).await {
-                                Ok(details) => {
-                                    println!("Manufacturer: {}", details.manufacturer);
-                                    println!("DigiKey Product Numbers: {:?}", details.digikey_product_numbers);
-                                    println!("Description: {}", details.detailed_description);
-                                    println!("Category: {}", details.category);
-                                    
-                                    if let Some(datasheet) = &details.datasheet_url {
-                                        println!("Datasheet: {datasheet}");
-                                    } else {
-                                        println!("Datasheet: Not available");
-                                    }
-                                    
-                                    if let Some(product_url) = &details.product_url {
-                                        println!("Product URL: {product_url}");
-                                    }
-                                    
-                                    println!("Product Status: {}", details.product_status.as_str());
-                                    println!("Quantity Available: {}", details.quantity_available);
-                                    
-                                    if let Some(price) = details.unit_price {
-                                        println!("Unit Price: ${price:.2}");
-                                    }
-                                    
-                                    if let Some(photo) = &details.photo_url {
-                                        println!("Photo URL: {photo}");
-                                    }
-                                    
-                                    println!("Discontinued: {}", details.discontinued);
-                                    println!("End of Life: {}", details.end_of_life);
-                                    println!("Normally Stocking: {}", details.normally_stocking);
-                                },
-                                Err(e) => {
-                                    error!("Failed to fetch part details: {:?}", e);
-                                    eprintln!("Failed to fetch part details: {e:?}");
-                                    match e {
-                                        digikey::DigikeyError::EnvVar(_) => {
-                                            eprintln!("Make sure DIGIKEY_CLIENT_ID and DIGIKEY_CLIENT_SECRET environment variables are set.");
-                                        },
-                                        digikey::DigikeyError::Api(api_err) => {
-                                            eprintln!("API Error: {api_err}");
-                                            eprintln!("Check if the part number '{mpn}' exists in Digikey's database.");
-                                        },
-                                        _ => {}
-                                    }
-                                }
+        Commands::Fetch { source } => match source {
+            FetchCommands::DigikeyPartInfo { mpn } => {
+                info!("Fetching Digikey part information for: {}", mpn);
+
+                match digikey::DigikeyClient::new() {
+                    Ok(client) => match client.get_part_details(&mpn).await {
+                        Ok(details) => {
+                            println!("Manufacturer: {}", details.manufacturer);
+                            println!(
+                                "DigiKey Product Numbers: {:?}",
+                                details.digikey_product_numbers
+                            );
+                            println!("Description: {}", details.detailed_description);
+                            println!("Category: {}", details.category);
+
+                            if let Some(datasheet) = &details.datasheet_url {
+                                println!("Datasheet: {datasheet}");
+                            } else {
+                                println!("Datasheet: Not available");
                             }
-                        },
-                        Err(e) => {
-                            error!("Failed to create Digikey client: {:?}", e);
-                            eprintln!("Failed to create Digikey client: {e:?}");
+
+                            if let Some(product_url) = &details.product_url {
+                                println!("Product URL: {product_url}");
+                            }
+
+                            println!("Product Status: {}", details.product_status.as_str());
+                            println!("Quantity Available: {}", details.quantity_available);
+
+                            if let Some(price) = details.unit_price {
+                                println!("Unit Price: ${price:.2}");
+                            }
+
+                            if let Some(photo) = &details.photo_url {
+                                println!("Photo URL: {photo}");
+                            }
+
+                            println!("Discontinued: {}", details.discontinued);
+                            println!("End of Life: {}", details.end_of_life);
+                            println!("Normally Stocking: {}", details.normally_stocking);
                         }
+                        Err(e) => {
+                            error!("Failed to fetch part details: {:?}", e);
+                            eprintln!("Failed to fetch part details: {e:?}");
+                            match e {
+                                digikey::DigikeyError::EnvVar(_) => {
+                                    eprintln!(
+                                        "Make sure DIGIKEY_CLIENT_ID and DIGIKEY_CLIENT_SECRET environment variables are set."
+                                    );
+                                }
+                                digikey::DigikeyError::Api(api_err) => {
+                                    eprintln!("API Error: {api_err}");
+                                    eprintln!(
+                                        "Check if the part number '{mpn}' exists in Digikey's database."
+                                    );
+                                }
+                                _ => {}
+                            }
+                        }
+                    },
+                    Err(e) => {
+                        error!("Failed to create Digikey client: {:?}", e);
+                        eprintln!("Failed to create Digikey client: {e:?}");
                     }
                 }
             }
-        }
+        },
     }
 }

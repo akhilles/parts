@@ -2,3 +2,41 @@ parts {
     STM32H747XIH6 { mpns "STM32H747XIH6" "STM32H747XIH6TR" }
     RP2040 { aliases "SC0914";  mpns "SC0914(7)" "SC0914(13)" }
 }
+
+// Resistor series definitions
+// Units: power (W), tolerance (decimal), tcr (1/K), temp (°C), resistance (Ω)
+resistor-series {
+    ERJ2RKF {
+        manufacturer "Panasonic Electronic Components"
+        package "0402"
+        composition "Thick Film"
+        power 0.1
+        tolerance 0.01
+        tcr 100e-6
+        temp {
+            min -55
+            max 155
+        }
+        aec-q200 0
+        standard-values E24 E96
+        range 10 1e6
+        mpn_template "ERJ-2RKF{value|iec4}X"
+    }
+    ERJ2RKD {
+        manufacturer "Panasonic Electronic Components"
+        package "0402"
+        composition "Thick Film"
+        power 0.1
+        tolerance 0.005
+        tcr 100e-6
+        temp {
+            min -55
+            max 155
+        }
+        aec-q200 0
+        standard-values E24 E96
+        range 10 97.6
+        range 102e3 1e6
+        mpn_template "ERJ-2RKD{value|iec4}X"
+    }
+}
