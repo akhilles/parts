@@ -1,0 +1,20 @@
+{
+  "category": "Circuit Protection",
+  "description": "14V Clamp 2.5A (8/20µs) Ipp Tvs Diode Surface Mount 10-USON (2.5x1)",
+  "digikey_part_numbers": [
+    "296-40696-2-ND",
+    "296-40696-1-ND",
+    "296-40696-6-ND"
+  ],
+  "discontinued": false,
+  "end_of_life": false,
+  "manufacturer": "Texas Instruments",
+  "mpn": "TPD4E05U06QDQARQ1",
+  "normally_stocking": true,
+  "status": "Active",
+  "urls": {
+    "datasheet": "https://www.ti.com/general/docs/suppproductinfo.tsp?distId=10&gotoUrl=https%3A%2F%2Fwww.ti.com%2Flit%2Fgpn%2Ftpd4e05u06-q1",
+    "image": "https://mm.digikey.com/Volume0/opasdata/d220001/medias/images/6349/296%7E4209584%7EDQA%7E10.jpg",
+    "product": "https://www.digikey.com/en/products/detail/texas-instruments/TPD4E05U06QDQARQ1/4972148"
+  }
+}

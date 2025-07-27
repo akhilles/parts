@@ -1,0 +1,20 @@
+{
+  "category": "Integrated Circuits (ICs)",
+  "description": "Linear Voltage Regulator IC Positive Adjustable 1 Output 500mA 6-WSON (2x2)",
+  "digikey_part_numbers": [
+    "296-TLV75801PDRVTTR-ND",
+    "296-TLV75801PDRVTCT-ND",
+    "296-TLV75801PDRVTDKR-ND"
+  ],
+  "discontinued": false,
+  "end_of_life": false,
+  "manufacturer": "Texas Instruments",
+  "mpn": "TLV75801PDRVT",
+  "normally_stocking": true,
+  "status": "Active",
+  "urls": {
+    "datasheet": "https://www.ti.com/general/docs/suppproductinfo.tsp?distId=10&gotoUrl=https%3A%2F%2Fwww.ti.com%2Flit%2Fgpn%2Ftlv758p",
+    "image": "https://mm.digikey.com/Volume0/opasdata/d220001/medias/images/317/296%7E4222173%7EDRV%7E6.jpg",
+    "product": "https://www.digikey.com/en/products/detail/texas-instruments/TLV75801PDRVT/10434633"
+  }
+}

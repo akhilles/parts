@@ -1,0 +1,20 @@
+{
+  "category": "Circuit Protection",
+  "description": "8V (Typ) Clamp 1.5A (8/20µs) Ipp Tvs Diode Surface Mount SOD-523",
+  "digikey_part_numbers": [
+    "1727-5906-2-ND",
+    "1727-5906-1-ND",
+    "1727-5906-6-ND"
+  ],
+  "discontinued": false,
+  "end_of_life": false,
+  "manufacturer": "Nexperia USA Inc.",
+  "mpn": "PESD5V0X1UB,135",
+  "normally_stocking": true,
+  "status": "Active",
+  "urls": {
+    "datasheet": "https://assets.nexperia.com/documents/data-sheet/PESD5V0X1UB.pdf",
+    "image": "https://mm.digikey.com/Volume0/opasdata/d220001/medias/images/6161/1727%7ESOD523%7E%7E2.jpg",
+    "product": "https://www.digikey.com/en/products/detail/nexperia-usa-inc/PESD5V0X1UB-135/2744557"
+  }
+}

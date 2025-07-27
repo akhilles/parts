@@ -1,0 +1,20 @@
+{
+  "category": "Switches",
+  "description": "Tactile Switch SPST-NO Top Actuated Surface Mount",
+  "digikey_part_numbers": [
+    "401-1429-2-ND",
+    "401-1429-1-ND",
+    "401-1429-6-ND"
+  ],
+  "discontinued": false,
+  "end_of_life": false,
+  "manufacturer": "C&K",
+  "mpn": "KMR231G LFS",
+  "normally_stocking": true,
+  "status": "Active",
+  "urls": {
+    "datasheet": "https://www.ckswitches.com/media/1479/kmr2.pdf",
+    "image": "https://mm.digikey.com/Volume0/opasdata/d220001/medias/images/2584/KMR211GLFS%2C%20KMR221GLFS%2C%20KMR231GLFS%2C%20KMR241GLFS.jpg",
+    "product": "https://www.digikey.com/en/products/detail/c-k/KMR231G-LFS/550477"
+  }
+}

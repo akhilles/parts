@@ -1,8 +1,34 @@
 parts {
+    // Microcontrollers
     STM32H747XIH6 { mpns "STM32H747XIH6" "STM32H747XIH6TR" }
     RP2040 { aliases "SC0914";  mpns "SC0914(7)" "SC0914(13)" }
     RP2350A { aliases "SC1509";  mpns "SC1509" "SC1509(13)" }
     RP2350B { aliases "SC1510";  mpns "SC1510" "SC1510(13)" }
+
+    // LEDs (Vishay) - Base product confirmed via parts CLI
+    VLMB1500 { mpns "VLMB1500-GS08" }
+    VLMG1500 { mpns "VLMG1500-GS08" }
+    VLMO1500 { mpns "VLMO1500-GS08" }
+    VLMS1500 { mpns "VLMS1500-GS08" }
+
+    // Protection Diodes
+    PESD5V0X1UB { mpns "PESD5V0X1UB,135" }
+    TPD4E05U06QDQARQ1 { mpns "TPD4E05U06QDQARQ1" }
+
+    // Connectors
+    USB4105GFA { mpns "USB4105-GF-A" }
+
+    // Switches
+    KMR231GLFS { mpns "KMR231G LFS" }
+
+    // LDO Regulators
+    TLV75801PDRV { mpns "TLV75801PDRVT" "TLV75801PDRVR" }
+
+    // Flash Memory
+    W25Q16JVUXIQ { mpns "W25Q16JVUXIQ TR" }
+
+    // Crystal Oscillators - Frequency is functionally important
+    SG210STF12MHz { mpns "SG-210STF 12.0000ML0" }
 }
 
 // Resistor series definitions

@@ -1,0 +1,20 @@
+{
+  "category": "Optoelectronics",
+  "description": "Orange 605nm LED Indication - Discrete 2V 0402 (1005 Metric)",
+  "digikey_part_numbers": [
+    "VLMO1500-GS08TR-ND",
+    "VLMO1500-GS08CT-ND",
+    "VLMO1500-GS08DKR-ND"
+  ],
+  "discontinued": false,
+  "end_of_life": false,
+  "manufacturer": "Vishay Semiconductor Opto Division",
+  "mpn": "VLMO1500-GS08",
+  "normally_stocking": true,
+  "status": "Active",
+  "urls": {
+    "datasheet": "https://www.vishay.com/docs/82554/vlmo1500.pdf",
+    "image": "https://mm.digikey.com/Volume0/opasdata/d220001/medias/images/6348/751%7E6.541-5096.01-4%7E%7E2.jpg",
+    "product": "https://www.digikey.com/en/products/detail/vishay-semiconductor-opto-division/VLMO1500-GS08/3504680"
+  }
+}

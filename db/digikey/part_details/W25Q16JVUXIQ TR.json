@@ -1,0 +1,20 @@
+{
+  "category": "Integrated Circuits (ICs)",
+  "description": "FLASH - NOR Memory IC 16Mbit SPI - Quad I/O 133 MHz 6 ns 8-USON (2x3)",
+  "digikey_part_numbers": [
+    "256-W25Q16JVUXIQTR-ND",
+    "256-W25Q16JVUXIQTRCT-ND",
+    "256-W25Q16JVUXIQTRDKR-ND"
+  ],
+  "discontinued": false,
+  "end_of_life": false,
+  "manufacturer": "Winbond Electronics",
+  "mpn": "W25Q16JVUXIQ TR",
+  "normally_stocking": true,
+  "status": "Active",
+  "urls": {
+    "datasheet": "//mm.digikey.com/Volume0/opasdata/d220001/medias/docus/6661/W25Q16JV.pdf",
+    "image": "https://mm.digikey.com/Volume0/opasdata/d220001/medias/images/2463/150%3B%20C04-203%3B%20NP%3B%208.jpg",
+    "product": "https://www.digikey.com/en/products/detail/winbond-electronics/W25Q16JVUXIQ-TR/15182017"
+  }
+}

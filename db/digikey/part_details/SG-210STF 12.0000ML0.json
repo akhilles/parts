@@ -1,0 +1,20 @@
+{
+  "category": "Crystals, Oscillators, Resonators",
+  "description": "12 MHz XO (Standard) CMOS Oscillator 1.6V ~ 3.6V Standby (Power Down) 4-SMD, No Lead",
+  "digikey_part_numbers": [
+    "114-SG-210STF12.0000ML0TR-ND",
+    "114-SG-210STF12.0000ML0CT-ND",
+    "114-SG-210STF12.0000ML0DKR-ND"
+  ],
+  "discontinued": false,
+  "end_of_life": false,
+  "manufacturer": "EPSON",
+  "mpn": "SG-210STF 12.0000ML0",
+  "normally_stocking": true,
+  "status": "Active",
+  "urls": {
+    "datasheet": "https://support.epson.biz/td/api/doc_check.php?dl=brief_SG-210STF&lang=en",
+    "image": "https://mm.digikey.com/Volume0/opasdata/d220001/medias/images/2605/SG-210STF%204-SMD.jpg",
+    "product": "https://www.digikey.com/en/products/detail/epson/SG-210STF-12-0000ML0/4437374"
+  }
+}
