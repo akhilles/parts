@@ -17,15 +17,17 @@ The system uses a hybrid approach:
 
 ## Data Storage
 
-All data is stored as [KDL](https://kdl.dev/) files in the `db/` directory:
+Data is stored in structured formats in the `db/` directory:
 
 - `db/sources.kdl` - Human-maintained parts and series (edit this manually)
   - Individual parts (ICs, MCUs) with specific MPNs
   - Series patterns for passives (resistors, capacitors, etc.)
-- `db/digikey/manufacturers.kdl` - Auto-generated manufacturer directory  
-- `db/digikey/part-details.kdl` - Auto-generated detailed part information
+- `db/digikey/part_details/` - Auto-generated individual JSON files for each part
+  - Each file is named with the MPN (e.g., `STM32H747XIH6.json`)
+  - Contains manufacturer, part numbers, status, URLs, and description
+  - Excludes pricing and quantity data to focus on static part information
 
-Auto-generated files include metadata about when they were last updated and are marked with warnings not to edit manually.
+Auto-generated files are managed by the tool and should not be edited manually.
 
 ## Quick Start
 
@@ -42,17 +44,12 @@ Auto-generated files include metadata about when they were last updated and are 
    # - Series patterns for passives (resistors, capacitors)
    ```
 
-3. Fetch manufacturer data:
-   ```bash
-   cargo run -- gen digikey-manufacturers
-   ```
-
-4. Fetch detailed part information:
+3. Fetch detailed part information:
    ```bash
    cargo run -- gen digikey-part-info
    ```
 
-5. Look up individual parts:
+4. Look up individual parts:
    ```bash
    cargo run -- fetch digikey-part-info STM32H747XIH6
    ```
@@ -61,7 +58,6 @@ Auto-generated files include metadata about when they were last updated and are 
 
 ### Generation Commands
 
-- `gen digikey-manufacturers [--force]` - Update manufacturer directory (respects staleness)
 - `gen digikey-part-info [--force]` - Update detailed part information for all parts in your curated list (respects staleness)
 
 ### Fetch Commands

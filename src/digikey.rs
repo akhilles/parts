@@ -3,6 +3,7 @@
 use crate::api_cache::{ApiCache, CacheRequest};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::collections::HashMap;
 use std::env;
 use std::fs;
@@ -15,6 +16,7 @@ use tracing::{debug, error, info, warn};
 const DIGIKEY_TOKEN_URL: &str = "https://api.digikey.com/v1/oauth2/token";
 const DIGIKEY_API_BASE: &str = "https://api.digikey.com/products/v4";
 const TOKEN_CACHE_FILENAME: &str = "digikey_token.json";
+const MAX_RETRIES: u32 = 3;
 
 #[derive(Debug)]
 pub struct DigikeyClient {
@@ -428,7 +430,6 @@ impl DigikeyClient {
         debug!("Making request to: {}", url);
 
         let mut retry_count = 0;
-        const MAX_RETRIES: u32 = 3;
 
         loop {
             if retry_count > 0 {
@@ -587,30 +588,105 @@ impl DigikeyClient {
             url = format!("{url}?{query_string}");
         }
 
-        // Get token and make request
+        // Get token and make request with retry logic
         let token = self.get_valid_token().await?;
         debug!("Making cached request to: {}", url);
 
-        let response = self
-            .client
-            .request(
-                reqwest::Method::from_bytes(method.as_bytes()).unwrap(),
-                &url,
-            )
-            .header("Authorization", format!("Bearer {token}"))
-            .header("X-DIGIKEY-Client-Id", &self.client_id)
-            .header("X-DIGIKEY-Locale-Language", "en")
-            .header("X-DIGIKEY-Locale-Currency", "USD")
-            .header("X-DIGIKEY-Locale-Site", "US")
-            .send()
-            .await?;
+        let mut retry_count = 0;
+        let (_status, response_text) = loop {
+            let response = self
+                .client
+                .request(
+                    reqwest::Method::from_bytes(method.as_bytes()).unwrap(),
+                    &url,
+                )
+                .header("Authorization", format!("Bearer {token}"))
+                .header("X-DIGIKEY-Client-Id", &self.client_id)
+                .header("X-DIGIKEY-Locale-Language", "en")
+                .header("X-DIGIKEY-Locale-Currency", "USD")
+                .header("X-DIGIKEY-Locale-Site", "US")
+                .send()
+                .await?;
 
-        let status = response.status();
-        let response_text = response.text().await?;
+            let status = response.status();
 
-        if !status.is_success() {
-            return Err(DigikeyError::Api(format!("HTTP {status}: {response_text}")));
-        }
+            if status.is_success() {
+                let response_text = response.text().await?;
+                break (status, response_text);
+            } else if status == 401 {
+                // Unauthorized - refresh token and retry
+                warn!("401 Unauthorized - refreshing token and retrying");
+                let _response_text = response.text().await?; // Consume response
+                
+                retry_count += 1;
+                if retry_count >= MAX_RETRIES {
+                    error!("Max retries exceeded for token refresh");
+                    return Err(DigikeyError::Api(format!("HTTP {status}: Unauthorized")));
+                }
+                
+                // Get a fresh token
+                let new_token = self.get_client_credentials_token().await?;
+                self.save_token_to_cache(&new_token)?;
+                
+                warn!("Token refreshed, retrying request (attempt {}/{})", retry_count + 1, MAX_RETRIES);
+                continue;
+            } else if status == 429 {
+                // Rate limit handling - get headers before consuming response
+                warn!("Rate limited by Digikey API (429)");
+
+                let retry_after_header = response.headers().get("Retry-After")
+                    .and_then(|h| h.to_str().ok())
+                    .and_then(|s| s.parse::<u64>().ok());
+
+                let _response_text = response.text().await?; // Consume response
+
+                retry_count += 1;
+                if retry_count >= MAX_RETRIES {
+                    error!("Max retries exceeded for rate limiting");
+                    return Err(DigikeyError::Api(format!("HTTP {status}: Rate limited")));
+                }
+
+                if let Some(seconds) = retry_after_header {
+                    warn!(
+                        "Rate limited, retrying after {} seconds from Retry-After header (attempt {}/{})",
+                        seconds, retry_count + 1, MAX_RETRIES
+                    );
+                    sleep(Duration::from_secs(seconds)).await;
+                } else {
+                    let delay = Duration::from_secs(2_u64.pow(retry_count) * 60);
+                    warn!(
+                        "Rate limited, retrying in {:?} (attempt {}/{})",
+                        delay,
+                        retry_count + 1,
+                        MAX_RETRIES
+                    );
+                    sleep(delay).await;
+                }
+            } else if status.is_server_error() {
+                // 5xx server errors
+                let _response_text = response.text().await?; // Consume response
+
+                retry_count += 1;
+                if retry_count >= MAX_RETRIES {
+                    error!("Max retries exceeded for server errors");
+                    return Err(DigikeyError::Api(format!("HTTP {status}: Server error")));
+                }
+
+                let delay = Duration::from_secs(2_u64.pow(retry_count) * 60);
+                warn!(
+                    "Server error {}, retrying in {:?} (attempt {}/{})",
+                    status,
+                    delay,
+                    retry_count + 1,
+                    MAX_RETRIES
+                );
+                sleep(delay).await;
+            } else {
+                // Client errors (4xx except 429) are not retryable
+                let response_text = response.text().await?;
+                return Err(DigikeyError::Api(format!("HTTP {status}: {response_text}")));
+            }
+        };
 
         // Cache the response
         let cache_request = CacheRequest {
@@ -726,58 +802,9 @@ impl DigikeyClient {
         })
     }
 
-    pub async fn update_manufacturers(force_refresh: bool) -> Result<(), DigikeyError> {
-        debug!(
-            "Updating manufacturers data (force_refresh={})",
-            force_refresh
-        );
-        let client = DigikeyClient::new()?;
-        let manufacturers = client.get_manufacturers_cached(force_refresh).await?;
-        client.write_manufacturers_to_kdl(&manufacturers).await?;
-        Ok(())
-    }
 
-    pub async fn write_manufacturers_to_kdl(
-        &self,
-        manufacturers: &ManufacturersResponse,
-    ) -> Result<PathBuf, DigikeyError> {
-        info!(
-            "Writing {} manufacturers to KDL file",
-            manufacturers.manufacturers.len()
-        );
 
-        // Create db/digikey directory if it doesn't exist
-        let digikey_dir = PathBuf::from("db").join("digikey");
-        if !digikey_dir.exists() {
-            fs::create_dir_all(&digikey_dir)?;
-            info!("Created directory: {:?}", digikey_dir);
-        }
 
-        let output_path = digikey_dir.join("manufacturers.kdl");
-
-        // Build KDL content
-        let mut kdl_content = String::new();
-
-        // Warning comment
-        kdl_content.push_str("// WARNING: This file is auto-generated. Do not edit manually.\n\n");
-
-        kdl_content.push_str("manufacturers {\n");
-
-        for manufacturer in &manufacturers.manufacturers {
-            kdl_content.push_str(&format!(
-                "    \"{}\" id={}\n",
-                escape_kdl_string(&manufacturer.name),
-                manufacturer.id
-            ));
-        }
-
-        kdl_content.push_str("}\n");
-
-        fs::write(&output_path, kdl_content)?;
-        info!("Successfully wrote manufacturers to: {:?}", output_path);
-
-        Ok(output_path)
-    }
 
     pub async fn get_part_details(
         &self,
@@ -868,102 +895,51 @@ impl DigikeyClient {
         })
     }
 
-    pub async fn write_parts_to_kdl(
+    pub async fn write_parts_as_json(
         &self,
         parts_with_details: &[(String, PartDetails)],
     ) -> Result<PathBuf, DigikeyError> {
-        info!("Writing {} parts to KDL file", parts_with_details.len());
+        info!("Writing {} parts as individual JSON files", parts_with_details.len());
 
-        // Create db/digikey directory if it doesn't exist
-        let digikey_dir = PathBuf::from("db").join("digikey");
-        if !digikey_dir.exists() {
-            fs::create_dir_all(&digikey_dir)?;
-            info!("Created directory: {:?}", digikey_dir);
+        // Create db/digikey/part_details directory if it doesn't exist
+        let parts_dir = PathBuf::from("db").join("digikey").join("part_details");
+        if !parts_dir.exists() {
+            fs::create_dir_all(&parts_dir)?;
+            info!("Created directory: {:?}", parts_dir);
         }
-
-        let output_path = digikey_dir.join("part-details.kdl");
-
-        // Build KDL content
-        let mut kdl_content = String::new();
-
-        // Warning comment
-        kdl_content.push_str("// WARNING: This file is auto-generated. Do not edit manually.\n\n");
-
-        kdl_content.push_str("parts {\n");
 
         for (mpn, details) in parts_with_details {
-            // Main part line with key properties only
-            kdl_content.push_str(&format!(
-                "    {} mfr=\"{}\" qty={} status=\"{}\" {{\n",
-                escape_kdl_identifier(mpn),
-                escape_kdl_string(&details.manufacturer),
-                details.quantity_available,
-                escape_kdl_string(details.product_status.as_str())
-            ));
+            // Create a clean part info struct without pricing/quantity
+            let part_info = serde_json::json!({
+                "mpn": mpn,
+                "manufacturer": details.manufacturer,
+                "digikey_part_numbers": details.digikey_product_numbers,
+                "status": details.product_status.as_str(),
+                "discontinued": details.discontinued,
+                "end_of_life": details.end_of_life,
+                "normally_stocking": details.normally_stocking,
+                "category": details.category,
+                "description": details.detailed_description,
+                "urls": {
+                    "product": details.product_url,
+                    "datasheet": details.datasheet_url,
+                    "image": details.photo_url
+                }
+            });
 
-            // Digikey part numbers (shortened)
-            kdl_content.push_str("        dkpns");
-            for dk_part in &details.digikey_product_numbers {
-                kdl_content.push_str(&format!(" \"{}\"", escape_kdl_string(dk_part)));
-            }
-            kdl_content.push('\n');
-
-            // Status flags as single node with properties
-            kdl_content.push_str(&format!(
-                "        status discontinued=#{} eol=#{} stocking=#{}\n",
-                details.discontinued, details.end_of_life, details.normally_stocking
-            ));
-
-            // Category
-            kdl_content.push_str(&format!(
-                "        category \"{}\"\n",
-                escape_kdl_string(&details.category)
-            ));
-
-            // Pricing
-            if let Some(price) = details.unit_price {
-                kdl_content.push_str(&format!(
-                    "        pricing currency=\"USD\" unit={price:.2}\n"
-                ));
-            }
-
-            // URLs block
-            kdl_content.push_str("        urls {\n");
-            if let Some(product_url) = &details.product_url {
-                kdl_content.push_str(&format!(
-                    "            product \"{}\"\n",
-                    escape_kdl_string(product_url)
-                ));
-            }
-            if let Some(datasheet) = &details.datasheet_url {
-                kdl_content.push_str(&format!(
-                    "            datasheet \"{}\"\n",
-                    escape_kdl_string(datasheet)
-                ));
-            }
-            if let Some(photo) = &details.photo_url {
-                kdl_content.push_str(&format!(
-                    "            image \"{}\"\n",
-                    escape_kdl_string(photo)
-                ));
-            }
-            kdl_content.push_str("        }\n");
-
-            // Description (using double quotes, escaped)
-            kdl_content.push_str(&format!(
-                "        description \"{}\"\n",
-                escape_kdl_string(&details.detailed_description)
-            ));
-
-            kdl_content.push_str("    }\n");
+            // Use MPN as filename, sanitize for filesystem
+            let safe_filename = mpn.replace(['/', '\\', ':', '*', '?', '"', '<', '>', '|'], "_");
+            let file_path = parts_dir.join(format!("{}.json", safe_filename));
+            
+            let json_content = serde_json::to_string_pretty(&part_info)?;
+            fs::write(&file_path, json_content)?;
+            debug!("Wrote part info to: {:?}", file_path);
         }
 
-        kdl_content.push_str("}\n");
+        info!("Successfully wrote {} parts to individual JSON files in: {:?}", 
+              parts_with_details.len(), parts_dir);
 
-        fs::write(&output_path, kdl_content)?;
-        info!("Successfully wrote parts to: {:?}", output_path);
-
-        Ok(output_path)
+        Ok(parts_dir)
     }
 
     pub async fn update_parts(force_refresh: bool) -> Result<(), DigikeyError> {
@@ -1012,11 +988,11 @@ impl DigikeyClient {
         }
 
         println!(
-            "Writing {} parts to db/digikey/part-details.kdl",
+            "Writing {} parts as individual JSON files to db/digikey/part_details/",
             all_parts_with_details.len()
         );
 
-        match client.write_parts_to_kdl(&all_parts_with_details).await {
+        match client.write_parts_as_json(&all_parts_with_details).await {
             Ok(path) => {
                 println!("✅ Parts written to: {}", path.display());
                 Ok(())
@@ -1026,6 +1002,114 @@ impl DigikeyClient {
                 Err(e)
             }
         }
+    }
+
+    pub async fn get_part_details_formatted(
+        &self,
+        product_number: &str,
+        format: &str,
+    ) -> Result<String, DigikeyError> {
+        match format {
+            "raw" => self.get_part_details_json_cached(product_number, false).await,
+            "json" => {
+                let raw_json = self.get_part_details_json_cached(product_number, false).await?;
+                let filtered_json = self.filter_json(&raw_json)?;
+                Ok(filtered_json)
+            }
+            "flat" => {
+                let raw_json = self.get_part_details_json_cached(product_number, false).await?;
+                let filtered_json = self.filter_json(&raw_json)?;
+                let flattened = self.flatten_json(&filtered_json)?;
+                Ok(flattened)
+            }
+            _ => Err(DigikeyError::Api(format!("Unknown format: {format}. Supported formats: raw, json, flat")))
+        }
+    }
+
+    /// Get part details JSON using cache
+    pub async fn get_part_details_json_cached(
+        &self,
+        product_number: &str,
+        force_refresh: bool,
+    ) -> Result<String, DigikeyError> {
+        let mut path_params = HashMap::new();
+        path_params.insert("productNumber".to_string(), product_number.to_string());
+
+        let response_text = self
+            .cached_api_request(
+                "GET",
+                "/search/{productNumber}/productdetails",
+                &path_params,
+                &HashMap::new(),
+                force_refresh,
+            )
+            .await?;
+
+        Ok(response_text)
+    }
+
+    fn filter_json(&self, json_str: &str) -> Result<String, DigikeyError> {
+        let mut value: Value = serde_json::from_str(json_str)?;
+        
+        // Remove SearchLocaleUsed
+        if let Some(obj) = value.as_object_mut() {
+            obj.remove("SearchLocaleUsed");
+            
+            // Remove ProductVariations from Product
+            if let Some(product) = obj.get_mut("Product").and_then(|p| p.as_object_mut()) {
+                product.remove("ProductVariations");
+            }
+        }
+        
+        Ok(serde_json::to_string_pretty(&value)?)
+    }
+
+    fn flatten_json(&self, json_str: &str) -> Result<String, DigikeyError> {
+        let value: Value = serde_json::from_str(json_str)?;
+        let mut result = Vec::new();
+        
+        fn flatten_value(path: &str, value: &Value, result: &mut Vec<String>) {
+            match value {
+                Value::Object(map) => {
+                    for (key, val) in map {
+                        let new_path = if path.is_empty() {
+                            key.clone()
+                        } else {
+                            format!("{}.{}", path, key)
+                        };
+                        flatten_value(&new_path, val, result);
+                    }
+                }
+                Value::Array(arr) => {
+                    for (index, val) in arr.iter().enumerate() {
+                        let new_path = format!("{}.{}", path, index);
+                        flatten_value(&new_path, val, result);
+                    }
+                }
+                _ => {
+                    let value_str = match value {
+                        Value::String(s) => s.clone(),
+                        Value::Number(n) => n.to_string(),
+                        Value::Bool(b) => b.to_string(),
+                        Value::Null => "null".to_string(),
+                        _ => value.to_string(),
+                    };
+                    result.push(format!("{}: {}", path, value_str));
+                }
+            }
+        }
+        
+        flatten_value("", &value, &mut result);
+        Ok(result.join("\n"))
+    }
+
+    #[deprecated(note = "Use get_part_details_json_cached instead for better performance")]
+    pub async fn get_part_details_json(
+        &self,
+        product_number: &str,
+    ) -> Result<String, DigikeyError> {
+        // Delegate to cached version with force_refresh=true
+        self.get_part_details_json_cached(product_number, true).await
     }
 }
 

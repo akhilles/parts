@@ -1,0 +1,18 @@
+{
+  "category": "Integrated Circuits (ICs)",
+  "description": "ARM® Cortex®-M4F, ARM® Cortex®-M7F STM32H7 Microcontroller IC 32-Bit Dual-Core 240MHz, 480MHz 2MB (2M x 8) FLASH 240+25-TFBGA (14x14)",
+  "digikey_part_numbers": [
+    "497-STM32H747XIH6TR-ND"
+  ],
+  "discontinued": false,
+  "end_of_life": false,
+  "manufacturer": "STMicroelectronics",
+  "mpn": "STM32H747XIH6TR",
+  "normally_stocking": false,
+  "status": "Active",
+  "urls": {
+    "datasheet": "https://www.st.com/resource/en/datasheet/stm32h747ag.pdf",
+    "image": "https://mm.digikey.com/Volume0/opasdata/d220001/medias/images/6255/497%7EA07U_ME%7EH%7E265.jpg",
+    "product": "https://www.digikey.com/en/products/detail/stmicroelectronics/STM32H747XIH6TR/26254195"
+  }
+}

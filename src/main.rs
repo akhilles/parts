@@ -27,16 +27,18 @@ enum Commands {
         #[command(subcommand)]
         source: FetchCommands,
     },
+    /// Search for part details and output raw JSON
+    Search {
+        /// The part number to search for
+        part_number: String,
+        /// Output format: json (default), flat, raw
+        #[arg(short, long, default_value = "json")]
+        format: String,
+    },
 }
 
 #[derive(Subcommand)]
 enum GenCommands {
-    /// Generate parts from Digikey manufacturers
-    DigikeyManufacturers {
-        /// Force refresh manufacturers even if they are fresh
-        #[arg(long)]
-        force: bool,
-    },
     /// Show information about parts in the parts list
     DigikeyPartInfo {
         /// Force refresh all parts even if they are fresh
@@ -74,35 +76,7 @@ async fn main() {
 
     match cli.command {
         Commands::Gen { source } => match source {
-            GenCommands::DigikeyManufacturers { force } => {
-                info!("Updating Digikey manufacturers (force: {})", force);
 
-                match digikey::DigikeyClient::update_manufacturers(force).await {
-                    Ok(()) => {
-                        println!("✅ Successfully updated manufacturers information");
-                    }
-                    Err(e) => {
-                        eprintln!("❌ Failed to update manufacturers: {e:?}");
-                        match e {
-                            digikey::DigikeyError::EnvVar(_) => {
-                                eprintln!(
-                                    "Make sure DIGIKEY_CLIENT_ID and DIGIKEY_CLIENT_SECRET environment variables are set."
-                                );
-                                eprintln!(
-                                    "You can get these from your Digikey developer account at https://developer.digikey.com"
-                                );
-                            }
-                            digikey::DigikeyError::Api(api_err) => {
-                                eprintln!("API Error: {api_err}");
-                                eprintln!(
-                                    "Check if your credentials are valid and you have access to the Product Information API."
-                                );
-                            }
-                            _ => {}
-                        }
-                    }
-                }
-            }
             GenCommands::DigikeyPartInfo { force } => {
                 info!("Updating Digikey part information (force: {})", force);
 
@@ -191,6 +165,23 @@ async fn main() {
                         error!("Failed to create Digikey client: {:?}", e);
                         eprintln!("Failed to create Digikey client: {e:?}");
                     }
+                }
+            }
+        },
+        Commands::Search { part_number, format } => {
+            match digikey::DigikeyClient::new() {
+                Ok(client) => match client.get_part_details_formatted(&part_number, &format).await {
+                    Ok(output) => {
+                        println!("{}", output);
+                    }
+                    Err(e) => {
+                        error!("Failed to fetch part details: {:?}", e);
+                        std::process::exit(1);
+                    }
+                },
+                Err(e) => {
+                    error!("Failed to create Digikey client: {:?}", e);
+                    std::process::exit(1);
                 }
             }
         },

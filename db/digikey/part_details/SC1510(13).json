@@ -1,0 +1,20 @@
+{
+  "category": "Integrated Circuits (ICs)",
+  "description": "- Microcontroller IC",
+  "digikey_part_numbers": [
+    "2648-SC1510(13)TR-ND",
+    "2648-SC1510(13)CT-ND",
+    "2648-SC1510(13)DKR-ND"
+  ],
+  "discontinued": false,
+  "end_of_life": false,
+  "manufacturer": "Raspberry Pi",
+  "mpn": "SC1510(13)",
+  "normally_stocking": true,
+  "status": "Active",
+  "urls": {
+    "datasheet": "https://datasheets.raspberrypi.com/rp2350/rp2350-datasheet.pdf",
+    "image": "https://mm.digikey.com/Volume0/opasdata/d220001/medias/images/7022/2648%7E80QFN-.90-10X10%7E%7E80.jpg",
+    "product": "https://www.digikey.com/en/products/detail/raspberry-pi/SC1510-13/26241106"
+  }
+}

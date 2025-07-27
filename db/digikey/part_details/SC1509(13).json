@@ -1,0 +1,20 @@
+{
+  "category": "Integrated Circuits (ICs)",
+  "description": "- Microcontroller IC 60-QFN (7x7)",
+  "digikey_part_numbers": [
+    "2648-SC1509(13)TR-ND",
+    "2648-SC1509(13)CT-ND",
+    "2648-SC1509(13)DKR-ND"
+  ],
+  "discontinued": false,
+  "end_of_life": false,
+  "manufacturer": "Raspberry Pi",
+  "mpn": "SC1509(13)",
+  "normally_stocking": true,
+  "status": "Active",
+  "urls": {
+    "datasheet": "https://datasheets.raspberrypi.com/rp2350/rp2350-datasheet.pdf",
+    "image": "https://mm.digikey.com/Volume0/opasdata/d220001/medias/images/6989/2648%7E60QFN-.90-7X7%7E%7E60.jpg",
+    "product": "https://www.digikey.com/en/products/detail/raspberry-pi/SC1509-13/26241107"
+  }
+}

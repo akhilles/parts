@@ -1,0 +1,20 @@
+{
+  "category": "Integrated Circuits (ICs)",
+  "description": "ARM® Cortex®-M0+ - Microcontroller IC 32-Bit Dual-Core 133MHz External Program Memory 56-QFN (7x7)",
+  "digikey_part_numbers": [
+    "2648-SC0914(13)TR-ND",
+    "2648-SC0914(13)CT-ND",
+    "2648-SC0914(13)DKR-ND"
+  ],
+  "discontinued": false,
+  "end_of_life": false,
+  "manufacturer": "Raspberry Pi",
+  "mpn": "SC0914(13)",
+  "normally_stocking": true,
+  "status": "Active",
+  "urls": {
+    "datasheet": "https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf",
+    "image": "https://mm.digikey.com/Volume0/opasdata/d220001/medias/images/4303/MFG_RP2040.jpg",
+    "product": "https://www.digikey.com/en/products/detail/raspberry-pi/SC0914-13/14306010"
+  }
+}
