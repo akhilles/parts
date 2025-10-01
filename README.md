@@ -59,10 +59,18 @@ Auto-generated files are managed by the tool and should not be edited manually.
 ### Generation Commands
 
 - `gen digikey-part-info [--force]` - Update detailed part information for all parts in your curated list (respects staleness)
+- `gen resistor-series [--file <path>]` - Generate resistor parts from series definitions (default: `db/sources.kdl`)
 
 ### Fetch Commands
 
 - `fetch digikey-part-info <mpn>` - Look up detailed information for a specific manufacturer part number
+
+### Search Commands
+
+- `search <part_number> [--format <format>]` - Search for part details with different output formats
+  - `--format json` (default) - Detailed JSON output
+  - `--format flat` - Flattened key-value format
+  - `--format raw` - Raw API response
 
 ## Staleness Management
 
